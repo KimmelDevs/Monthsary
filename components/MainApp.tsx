@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+import app from "@/lib/firebase";
 import { getProfile, CoupleProfile } from "@/lib/db";
-import SetupModal from "@/components/SetupModal";
+import AuthPage from "@/components/AuthPage";
 import Navbar from "@/components/Navbar";
 import CountdownPage from "@/components/CountdownPage";
 import TimelinePage from "@/components/TimelinePage";
@@ -12,29 +14,38 @@ import JournalPage from "@/components/JournalPage";
 type Tab = "countdown" | "timeline" | "letters" | "journal";
 
 export default function MainApp() {
+  const [authed, setAuthed] = useState(false);
   const [profile, setProfile] = useState<CoupleProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showSetup, setShowSetup] = useState(false);
   const [tab, setTab] = useState<Tab>("countdown");
 
-  const fetchProfile = async () => {
-    try {
-      const p = await getProfile();
-      setProfile(p);
-      if (!p) setShowSetup(true);
-    } catch (err) {
-      console.error("Firebase error:", err);
-      setShowSetup(true);
-    } finally {
+  const auth = getAuth(app);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setAuthed(true);
+        const p = await getProfile();
+        setProfile(p);
+      } else {
+        setAuthed(false);
+        setProfile(null);
+      }
       setLoading(false);
-    }
+    });
+    return () => unsub();
+  }, []);
+
+  const handleAuth = async () => {
+    const p = await getProfile();
+    setProfile(p);
+    setAuthed(true);
   };
 
-  useEffect(() => { fetchProfile(); }, []);
-
-  const onSetupDone = async () => {
-    setShowSetup(false);
-    await fetchProfile();
+  const handleLogout = async () => {
+    await signOut(auth);
+    setAuthed(false);
+    setProfile(null);
   };
 
   if (loading) {
@@ -50,25 +61,22 @@ export default function MainApp() {
     );
   }
 
+  if (!authed) return <AuthPage onAuth={handleAuth} />;
+
   return (
-    <>
-      {showSetup && <SetupModal onDone={onSetupDone} />}
-      {profile && (
-        <div className="relative z-10 min-h-screen">
-          <Navbar
-            active={tab}
-            onChange={setTab}
-            name2={profile.name2}
-            onEditProfile={() => setShowSetup(true)}
-          />
-          <main>
-            {tab === "countdown" && <CountdownPage profile={profile} />}
-            {tab === "timeline" && <TimelinePage />}
-            {tab === "letters" && <LettersPage />}
-            {tab === "journal" && <JournalPage />}
-          </main>
-        </div>
-      )}
-    </>
+    <div className="relative z-10 min-h-screen">
+      <Navbar
+        active={tab}
+        onChange={setTab}
+        name2={profile?.name2 ?? ""}
+        onLogout={handleLogout}
+      />
+      <main>
+        {profile && tab === "countdown" && <CountdownPage profile={profile} />}
+        {tab === "timeline" && <TimelinePage />}
+        {tab === "letters" && <LettersPage />}
+        {tab === "journal" && <JournalPage />}
+      </main>
+    </div>
   );
 }

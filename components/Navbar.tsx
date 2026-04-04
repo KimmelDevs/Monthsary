@@ -13,10 +13,10 @@ interface Props {
   active: Tab;
   onChange: (tab: Tab) => void;
   name2: string;
-  onEditProfile: () => void;
+  onLogout: () => void;
 }
 
-export default function Navbar({ active, onChange, name2, onEditProfile }: Props) {
+export default function Navbar({ active, onChange, name2, onLogout }: Props) {
   return (
     <nav
       className="sticky top-0 z-40 flex items-center flex-wrap gap-0"
@@ -27,21 +27,17 @@ export default function Navbar({ active, onChange, name2, onEditProfile }: Props
         padding: "0 1rem",
       }}
     >
-      <button
-        onClick={onEditProfile}
-        className="font-display text-xl mr-auto py-3 pr-4 transition-opacity hover:opacity-70"
-        style={{ color: "var(--wine)", fontStyle: "italic", fontWeight: 600, letterSpacing: "0.01em", background: "none", border: "none", cursor: "pointer" }}
-      >
+      <div className="font-display text-xl mr-auto py-3 pr-4" style={{ color: "var(--wine)", fontStyle: "italic", fontWeight: 600 }}>
         our <span style={{ color: "var(--gold)" }}>monthsary</span>
         {name2 && <span className="text-sm font-sans not-italic ml-2" style={{ color: "var(--muted)", fontWeight: 400 }}>with {name2}</span>}
-      </button>
+      </div>
 
-      <div className="flex">
+      <div className="flex items-center">
         {TABS.map((t) => (
           <button
             key={t.key}
             onClick={() => onChange(t.key)}
-            className="text-xs font-medium uppercase tracking-widest py-4 px-3 border-b-2 transition-all"
+            className="text-xs font-medium uppercase tracking-widest py-4 px-3 transition-all"
             style={{
               background: "none",
               border: "none",
@@ -55,6 +51,20 @@ export default function Navbar({ active, onChange, name2, onEditProfile }: Props
             {t.label}
           </button>
         ))}
+
+        <button
+          onClick={onLogout}
+          className="ml-3 text-xs px-3 py-1.5 rounded-lg transition-all"
+          style={{
+            background: "var(--soft)",
+            border: "1px solid var(--border)",
+            color: "var(--muted)",
+            cursor: "pointer",
+            fontFamily: "DM Sans, sans-serif",
+          }}
+        >
+          Log out
+        </button>
       </div>
     </nav>
   );
