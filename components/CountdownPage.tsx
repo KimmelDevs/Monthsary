@@ -20,7 +20,6 @@ function getNextMonthsary() {
     (now.getMonth() - start.getMonth());
   if (now.getDate() < start.getDate()) months--;
   months = Math.max(0, months);
-
   const next = new Date(start);
   next.setMonth(start.getMonth() + months + 1);
   return { months, next };
@@ -33,14 +32,9 @@ export default function CountdownPage() {
   useEffect(() => {
     const { months, next } = getNextMonthsary();
     setInfo({ months, next });
-
     const tick = () => {
       const diff = next.getTime() - Date.now();
-      if (diff <= 0) {
-        const r = getNextMonthsary();
-        setInfo(r);
-        return;
-      }
+      if (diff <= 0) { setInfo(getNextMonthsary()); return; }
       setTimeLeft({
         days: Math.floor(diff / 86400000),
         hours: Math.floor((diff % 86400000) / 3600000),
@@ -48,7 +42,6 @@ export default function CountdownPage() {
         seconds: Math.floor((diff % 60000) / 1000),
       });
     };
-
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
@@ -59,84 +52,166 @@ export default function CountdownPage() {
     weekday: "long", year: "numeric", month: "long", day: "numeric",
   });
 
+  const timerBoxes = timeLeft
+    ? [
+        { val: pad(timeLeft.days), label: "Days" },
+        { val: pad(timeLeft.hours), label: "Hours" },
+        { val: pad(timeLeft.minutes), label: "Minutes" },
+        { val: pad(timeLeft.seconds), label: "Seconds" },
+      ]
+    : [
+        { val: "--", label: "Days" },
+        { val: "--", label: "Hours" },
+        { val: "--", label: "Minutes" },
+        { val: "--", label: "Seconds" },
+      ];
+
   return (
-    <div className="max-w-2xl mx-auto px-4 py-10 stagger">
-      {/* Hero Card */}
-      <div
-        className="card p-8 text-center mb-6 relative overflow-hidden"
-        style={{ boxShadow: "0 8px 40px rgba(201,112,110,0.12)" }}
-      >
-        <div
-          className="absolute -top-4 right-4 font-display text-9xl select-none pointer-events-none"
-          style={{ color: "var(--blush)", opacity: 0.2, lineHeight: 1 }}
-        >
-          ♡
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=DM+Sans:wght@300;400;500&display=swap');
+        .cd-page {
+          min-height: calc(100vh - 60px);
+          background: linear-gradient(160deg, #fff0f5 0%, #ffd6e4 50%, #ffb3cc 100%);
+          padding: 2.5rem 1rem;
+          position: relative;
+          overflow: hidden;
+        }
+        .cd-page::before {
+          content: '♡';
+          position: fixed; top: -60px; right: -40px;
+          font-size: 320px; color: rgba(255,182,210,0.25);
+          pointer-events: none; line-height: 1;
+          font-family: serif;
+        }
+        .cd-page::after {
+          content: '♡';
+          position: fixed; bottom: -80px; left: -60px;
+          font-size: 280px; color: rgba(255,150,190,0.18);
+          pointer-events: none; line-height: 1;
+          font-family: serif;
+        }
+        .cd-hero {
+          max-width: 640px; margin: 0 auto 1.5rem;
+          background: rgba(255,255,255,0.65);
+          backdrop-filter: blur(16px);
+          border: 1px solid rgba(255,180,210,0.5);
+          border-radius: 28px;
+          padding: 2.5rem 2rem;
+          text-align: center;
+          box-shadow: 0 8px 48px rgba(220,80,130,0.12), 0 2px 8px rgba(220,80,130,0.08);
+        }
+        .cd-badge {
+          display: inline-block;
+          background: linear-gradient(135deg, #ff85b3, #f472a0);
+          color: white;
+          font-family: 'Cormorant Garamond', serif;
+          font-style: italic;
+          font-size: 1rem;
+          padding: 0.35rem 1.2rem;
+          border-radius: 20px;
+          margin-bottom: 1.2rem;
+          box-shadow: 0 2px 12px rgba(244,114,160,0.35);
+        }
+        .cd-title {
+          font-family: 'Cormorant Garamond', serif;
+          font-size: clamp(1.8rem, 5vw, 2.8rem);
+          font-weight: 300;
+          color: #b5175e;
+          line-height: 1.2;
+          margin-bottom: 0.4rem;
+        }
+        .cd-sub {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 0.88rem;
+          color: #d4669a;
+          margin-bottom: 2rem;
+        }
+        .cd-timer {
+          display: flex; gap: 0.75rem;
+          justify-content: center; flex-wrap: wrap;
+          margin-bottom: 0.5rem;
+        }
+        .cd-box {
+          min-width: 76px;
+          padding: 1rem 1.2rem;
+          text-align: center;
+          border-radius: 20px;
+          background: linear-gradient(145deg, #ff85b3, #f04090);
+          box-shadow: 0 4px 18px rgba(240,64,144,0.3);
+          transition: transform 0.1s;
+        }
+        .cd-box:hover { transform: translateY(-2px); }
+        .cd-num {
+          font-family: 'Cormorant Garamond', serif;
+          font-size: 2.8rem; font-weight: 600;
+          color: white; line-height: 1;
+          text-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .cd-label {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 0.62rem; color: rgba(255,255,255,0.85);
+          text-transform: uppercase; letter-spacing: 0.1em;
+          margin-top: 0.35rem;
+        }
+        .cd-date-card {
+          max-width: 640px; margin: 0 auto;
+          background: rgba(255,255,255,0.65);
+          backdrop-filter: blur(16px);
+          border: 1px solid rgba(255,180,210,0.5);
+          border-radius: 20px;
+          padding: 1.2rem 1.5rem;
+          display: flex; align-items: center; gap: 1rem;
+          box-shadow: 0 4px 20px rgba(220,80,130,0.08);
+        }
+        .cd-date-icon {
+          width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+          background: linear-gradient(135deg, #ff85b3, #f04090);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 1.3rem;
+          box-shadow: 0 3px 12px rgba(240,64,144,0.3);
+        }
+        .cd-date-title {
+          font-family: 'Cormorant Garamond', serif;
+          font-size: 1.15rem; color: #b5175e; margin-bottom: 0.2rem;
+        }
+        .cd-date-label {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 0.82rem; color: #d4669a;
+        }
+      `}</style>
+
+      <div className="cd-page">
+        <div className="cd-hero">
+          <div className="cd-badge">
+            Together for {info.months} month{info.months !== 1 ? "s" : ""} 🌸
+          </div>
+
+          <h1 className="cd-title">
+            Our next <em>monthsary</em> is coming
+          </h1>
+          <p className="cd-sub">
+            Celebrating {info.months + 1} months with {PARTNER_NAME} 💕
+          </p>
+
+          <div className="cd-timer">
+            {timerBoxes.map(({ val, label }) => (
+              <div key={label} className="cd-box">
+                <div className="cd-num">{val}</div>
+                <div className="cd-label">{label}</div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <span
-          className="inline-block font-display text-base px-4 py-1 rounded-full mb-4"
-          style={{ background: "linear-gradient(135deg,var(--blush),var(--soft))", color: "var(--wine)", border: "1px solid var(--blush)", fontStyle: "italic" }}
-        >
-          Together for {info.months} month{info.months !== 1 ? "s" : ""} 🌸
-        </span>
-
-        <h1 className="font-display mb-1" style={{ fontSize: "clamp(1.8rem,5vw,2.8rem)", fontWeight: 300, color: "var(--wine)", lineHeight: 1.2 }}>
-          Our next <em>monthsary</em> is coming
-        </h1>
-        <p className="text-sm mb-8" style={{ color: "var(--muted)" }}>
-          Celebrating {info.months + 1} months with {PARTNER_NAME} 💕
-        </p>
-
-        {/* Timer */}
-        <div className="flex gap-3 justify-center flex-wrap mb-8">
-          {(timeLeft
-            ? [
-                { val: pad(timeLeft.days), label: "Days" },
-                { val: pad(timeLeft.hours), label: "Hours" },
-                { val: pad(timeLeft.minutes), label: "Minutes" },
-                { val: pad(timeLeft.seconds), label: "Seconds" },
-              ]
-            : [
-                { val: "--", label: "Days" },
-                { val: "--", label: "Hours" },
-                { val: "--", label: "Minutes" },
-                { val: "--", label: "Seconds" },
-              ]
-          ).map(({ val, label }) => (
-            <div
-              key={label}
-              className="min-w-[72px] py-3 px-4 text-center rounded-2xl"
-              style={{ background: "var(--soft)", border: "1px solid var(--border)" }}
-            >
-              <div className="font-display" style={{ fontSize: "2.6rem", fontWeight: 600, color: "var(--wine)", lineHeight: 1 }}>
-                {val}
-              </div>
-              <div className="text-xs mt-1 uppercase tracking-widest" style={{ color: "var(--muted)" }}>
-                {label}
-              </div>
-            </div>
-          ))}
+        <div className="cd-date-card">
+          <div className="cd-date-icon">📅</div>
+          <div>
+            <div className="cd-date-title">{info.months + 1} Monthsary Date</div>
+            <div className="cd-date-label">{nextLabel}</div>
+          </div>
         </div>
       </div>
-
-      {/* Next date info */}
-      <div
-        className="card p-5 flex items-center gap-4"
-        style={{ boxShadow: "0 4px 20px rgba(122,46,46,0.06)" }}
-      >
-        <div
-          className="w-12 h-12 rounded-full flex items-center justify-center text-xl flex-shrink-0"
-          style={{ background: "linear-gradient(135deg,var(--rose),var(--wine))" }}
-        >
-          📅
-        </div>
-        <div>
-          <h4 className="font-display text-lg" style={{ color: "var(--wine)" }}>
-            {info.months + 1} Monthsary Date
-          </h4>
-          <p className="text-sm" style={{ color: "var(--muted)" }}>{nextLabel}</p>
-        </div>
-      </div>
-    </div>
+    </>
   );
 }
