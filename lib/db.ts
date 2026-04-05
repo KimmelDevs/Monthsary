@@ -44,6 +44,7 @@ export interface TimelineEntry {
   caption: string;
   memory: string;
   imageBase64?: string;
+  images?: string[];
   createdAt?: unknown;
 }
 
@@ -55,6 +56,10 @@ export async function getTimelineEntries(): Promise<TimelineEntry[]> {
   const q = query(collection(db, "timeline"), orderBy("createdAt", "desc"));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<TimelineEntry, "id">) }));
+}
+
+export async function updateTimelineEntry(id: string, data: Omit<TimelineEntry, "id">) {
+  return updateDoc(doc(db, "timeline", id), { ...data });
 }
 
 export async function deleteTimelineEntry(id: string) {
