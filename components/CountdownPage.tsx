@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { CoupleProfile } from "@/lib/db";
 
-interface Props {
-  profile: CoupleProfile;
-}
+const START_DATE = "2023-11-06";
+const PARTNER_NAME = "Jaynesa";
 
 interface TimeLeft {
   days: number;
@@ -14,8 +12,8 @@ interface TimeLeft {
   seconds: number;
 }
 
-function getNextMonthsary(startDate: string) {
-  const start = new Date(startDate + "T00:00:00");
+function getNextMonthsary() {
+  const start = new Date(START_DATE + "T00:00:00");
   const now = new Date();
   let months =
     (now.getFullYear() - start.getFullYear()) * 12 +
@@ -28,18 +26,18 @@ function getNextMonthsary(startDate: string) {
   return { months, next };
 }
 
-export default function CountdownPage({ profile }: Props) {
+export default function CountdownPage() {
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
   const [info, setInfo] = useState({ months: 0, next: new Date() });
 
   useEffect(() => {
-    const { months, next } = getNextMonthsary(profile.startDate);
+    const { months, next } = getNextMonthsary();
     setInfo({ months, next });
 
     const tick = () => {
       const diff = next.getTime() - Date.now();
       if (diff <= 0) {
-        const r = getNextMonthsary(profile.startDate);
+        const r = getNextMonthsary();
         setInfo(r);
         return;
       }
@@ -54,7 +52,7 @@ export default function CountdownPage({ profile }: Props) {
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [profile.startDate]);
+  }, []);
 
   const pad = (n: number) => String(n).padStart(2, "0");
   const nextLabel = info.next.toLocaleDateString("en-PH", {
@@ -86,7 +84,7 @@ export default function CountdownPage({ profile }: Props) {
           Our next <em>monthsary</em> is coming
         </h1>
         <p className="text-sm mb-8" style={{ color: "var(--muted)" }}>
-          Celebrating {info.months + 1} months with {profile.name2} 💕
+          Celebrating {info.months + 1} months with {PARTNER_NAME} 💕
         </p>
 
         {/* Timer */}
@@ -119,30 +117,6 @@ export default function CountdownPage({ profile }: Props) {
             </div>
           ))}
         </div>
-
-        {/* Partner message */}
-        {profile.partnerMsg && (
-          <div
-            className="relative rounded-2xl p-5 text-left"
-            style={{ background: "linear-gradient(135deg,rgba(242,196,196,0.25),rgba(249,236,232,0.4))", border: "1px solid var(--blush)" }}
-          >
-            <span
-              className="absolute font-display text-6xl leading-none"
-              style={{ color: "var(--blush)", top: "1rem", left: "1rem" }}
-            >
-              "
-            </span>
-            <p
-              className="font-display text-lg pl-6 leading-relaxed"
-              style={{ fontStyle: "italic", color: "var(--wine)" }}
-            >
-              {profile.partnerMsg}
-            </p>
-            <p className="text-right text-xs mt-2" style={{ color: "var(--muted)" }}>
-              — with love, {profile.name2} ♡
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Next date info */}
