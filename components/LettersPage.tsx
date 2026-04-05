@@ -417,7 +417,10 @@ export default function LettersPage() {
             </div>
           ) : (
             <div className="lt-grid">
-              {letters.map((l) => {
+              {[...letters].sort((a, b) => {
+                const getNum = (s: string) => parseInt(s.match(/\d+/)?.[0] || "0", 10);
+                return getNum(b.month) - getNum(a.month);
+              }).map((l) => {
                 const locked = isLocked(l);
                 // Color variations per letter
                 const colors = [
