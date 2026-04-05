@@ -72,7 +72,7 @@ export default function MainApp() {
         onLogout={handleLogout}
       />
       <main>
-        {profile && tab === "countdown" && <CountdownPage profile={profile} />}
+        {tab === "countdown" && <CountdownPage />}
         {tab === "timeline" && <TimelinePage />}
         {tab === "letters" && <LettersPage />}
         {tab === "journal" && <JournalPage />}
